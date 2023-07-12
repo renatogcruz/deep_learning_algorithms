@@ -1,8 +1,9 @@
 # Deep Learning - aula 1
 
-# Modelando um algoritmo de deep learning na unha
+# Modelando um algoritmo de Deep Learning na unha
 
-pacotes <- c("plotly","tidyverse")
+pacotes <- c("plotly",
+             "tidyverse")
 
 if(sum(as.numeric(!pacotes %in% installed.packages())) != 0){
   instalador <- pacotes[!pacotes %in% installed.packages()]
@@ -20,7 +21,10 @@ set.seed(0)
 
 #### Lê nossos dados de vinho
 data <- read.csv(file = "winequality-red.csv")
+head(data)
+
 data <- scale(data)
+head(data)
 
 #### Estatísticas univariadas
 summary(data)
@@ -30,14 +34,17 @@ train_test_split_index <- 0.8 * nrow(data)
 train_test_split_index # output: [1] 1279.2 (valor float)
 
 # conjunto de treinamento
-train <- data.frame(data[1:train_test_split_index,])
+train <- data.frame(data[1:train_test_split_index,]) # [linhas, colunas]
+
 # conjunto de teste
 test <- data.frame(data[(train_test_split_index+1): nrow(data),])
 
 #### Padronizar dados para melhor performance
+                                   # TREINO
 train_x <- data.frame(train[1:11]) # variáveis explicativas (xs)
 train_y <- data.frame(train[12])   # variável target (y)
 
+                                   # TESTE
 test_x <- data.frame(test[1:11])   # variáveis explicativas (xs)
 test_y <- data.frame(test[12])     # variável target (y)
 
@@ -49,6 +56,10 @@ train_y <- t(train_y)
 test_x <- t(test_x )
 test_y <- t(test_y)
 
+#########################################
+#                                       #
+#        FUNÇÕES DEEP LEARNING          #
+#                                       #
 #########################################
 #### Função 1 - Criar arquitetura da rede
 
@@ -68,23 +79,31 @@ getLayerSize <- function(X, y, hidden_neurons) {
 layer_size <- getLayerSize(train_x, train_y, hidden_neurons = 4)
 layer_size
 
+
 ####################################################
 #### Função 2 - Inicializa Parâmetros randomicamente
 
 # A partir da arquitetura, inicializamos os parâmetros 
-#randomicamente. O primeiro conjunto é W1 e b1. O segundo é  
-#W2 and b2.O valor destes parâmetros dependem do tamanho das 
-#camadas de entrada e saída.
+# randomicamente. O primeiro conjunto é W1 e b1. O segundo é  
+# W2 and b2.O valor destes parâmetros dependem do tamanho das 
+# camadas de entrada e saída.
+
+
 
 initializeParameters <- function(X, layer_size){
   
   # arquitetura de rede
-  n_x <- layer_size$n_x # 14
+  n_x <- layer_size$n_x # 11
   n_h <- layer_size$n_h # 4
   n_y <- layer_size$n_y # 1
   
+  # --
+  # ?runif
+  # The Uniform Distribution
+  # gera uma matriz de pesos com distribuição uniforme aleatórios
   W1 <- matrix(runif(n_h * n_x), nrow = n_h, ncol = n_x, byrow = TRUE) * 0.01
   W2 <- matrix(runif(n_y * n_h), nrow = n_y, ncol = n_h, byrow = TRUE) * 0.01
+  # --
   
   params <- list("W1" = W1,
                  "W2" = W2)
@@ -98,17 +117,21 @@ lapply(init_params, function(x) dim(x))
 
 ###############################
 #### Função 3 - Função Sigmoide
+
 # Função de ativação utilziada ao longo do nosso trabalho. Iremos fazer o arco 
 # tangente também, mas isso já temos função no R: tanh().
+
 sigmoid <- function(x){
   return(1 / (1 + exp(-x)))
 }
 
 ###################################
 #### Função 4 - Forward Propagation
+
 # Agora com todas as informações dos pesos e estrutura da rede, iniciamos o 
 # processo de geração de resultados. A multiplicação de matrizes será feita por
 # meio do operador %*%. 
+
 forwardPropagation <- function(X, params, layer_size){
   
   n_h <- layer_size$n_h
@@ -136,17 +159,22 @@ forwardPropagation <- function(X, params, layer_size){
 
 fwd_prop <- forwardPropagation(train_x, init_params, layer_size)
 
+
+
 ############################
 #### Função 5- Cost Function
 # Mean Squared Error
 
 computeCost <- function(y, cache) {
   
-  m <- dim(y)[2]
+  m <- dim(y)[2] #dim(train_y)[2]
   
-  A2 <- cache$A2
+  A2 <- cache$A2 #camada de saída (y)
   
-  cost <- sum((y-A2)^2)/m
+  # soma do valor ao quadrado do erro (y - A2) 
+  # divido pela quantidade de observações
+  
+  cost <- sum((y-A2)^2)/m 
   
   return (cost)
 }
@@ -157,8 +185,10 @@ cost <- computeCost(train_y, fwd_prop)
 
 ###############################
 #### Função 6 - Backpropagation
-#### Essa parte exige conhecimento de cálculo diferencial para entender o 
-# gradiente. Entretanto, só irei dar a noção lógica do que está ocorrendo sem 
+
+# Essa parte exige conhecimento de cálculo diferencial para entender o 
+# gradiente. 
+# Entretanto, só irei dar a noção lógica do que está ocorrendo sem 
 # necessidade de adentrar no cálculo. Para mais detalhes vide: 
 # https://rpubs.com/theairbend3r/bin-classification-small-nnet-scratch-r.
 
@@ -174,8 +204,11 @@ backwardPropagation <- function(X, y, cache, params, layer_size){
   A1 <- cache$A1
   W2 <- params$W2
   
-  
+  # dZ2 erro
+  # A2 valor predito - Y valor real
   dZ2 <- A2 - y
+  # dw2 quanto temos que mexer no parametro para reajustar
+  # baseado em calculo diferencial
   dW2 <- 1/m * (dZ2 %*% t(A1)) 
   
   
@@ -191,7 +224,8 @@ backwardPropagation <- function(X, y, cache, params, layer_size){
 
 ##############################
 #### Função 7 - Atualiza pesos
-#### A atualização de pesso é feita com base nos cálculos anteriores e na taxa 
+
+# A atualização de peso é feita com base nos cálculos anteriores e na taxa 
 # de aprendizagem.
 
 updateParameters <- function(grads, params, learning_rate){
@@ -214,13 +248,14 @@ updateParameters <- function(grads, params, learning_rate){
 
 #########################
 # Parte 9 - Treina modelo
-#### Quais as etapas?
-#- Arquitetura da rede.
-#- Inicializa um vetor de historia da função custo para guardar resultados.
-#- Faz foward loop.
-#- Calcula perda.
-#- Atualiza parâmetros.
-#- Usa os novos parâmetros.
+
+# Quais as etapas?
+# - Arquitetura da rede.
+# - Inicializa um vetor de historia da função custo para guardar resultados.
+# - Faz foward loop.
+# - Calcula perda.
+# - Atualiza parâmetros.
+# - Usa os novos parâmetros.
 
 ##### Entra o conceitos de épocas (EPOCHS).
 
@@ -229,7 +264,7 @@ trainModel <- function(X, y, num_iteration, hidden_neurons, lr){
   layer_size <- getLayerSize(X, y, hidden_neurons)
   init_params <- initializeParameters(X, layer_size)
   
-  cost_history <- c()
+  cost_history <- c() # cria um vetor vazio
   
   for (i in 1:num_iteration) {
     fwd_prop <- forwardPropagation(X, init_params, layer_size)
