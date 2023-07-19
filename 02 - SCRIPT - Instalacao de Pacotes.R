@@ -18,3 +18,6 @@ if(sum(as.numeric(!pacotes %in% installed.packages())) != 0){
 } else {
   sapply(pacotes, require, character = T) 
 }
+
+
+
