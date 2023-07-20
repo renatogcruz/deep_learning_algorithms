@@ -2,27 +2,103 @@
 title: "R Notebook"
 output: Aula 3 - Deep Learning
 ---
-#Pacotes
+
+# Pacotes
+
 ```{r}
+
 library("rattle")
 library("rnn")
 library("ggplot2")
+
 ```
 
-#Dados = Weather AUS
+RNN - Rede Neural Recorrente
+
+- Isso significa que temos uma rede que "guarda" todo o passado;
+- Explicar crescimento econônimoco com base em nível de confiança;
+- Simples Recurrent Neural Network.
+
+Rede de Elman
+
+- Resultado que os valores da camada escondida estarão multiplicados por valores de pesos elevados a potencias maiores quanto mais antiga for essa informação.
+
+Backpropagation
+
+Dissipação do Gradiente
+
+- intuição;
+- Multiplicação de números menores do que 1;
+- Multiplicação de números maiores do que 1.
+
+Problemas com Gradiente
+
+- Ocorre em qualquer rede - mais comum em RNN;
+- Quanto mais profunda, pior
+
+Backpropagation Truncada
+
+- O processo truncado consiste em parar a avaliação de mudanças de pesos até certo ponto.
+- Custo computcional;
+- Solução arbitrária.
+
+REsolver Vanishing Gradient
+
+- Inicilização de matriz de peso;
+- Função de ativação ReLU.
+
+Clipping do Gradiente
+
+- Solução possível para Dissipação e Explosão
+- O clipping define um valor limite definido nos gradientes, o que significa que, mesmo se um gradiente aumentar além do valor predefinido durante o treinamento, seu valor ainda será limitado ao limite definido. Dessa forma, a direção do gradiente permanece inalterada e apenas a magnitude do gradiente é alterada.
+
+LSTM 
+
+- Ligação da entrada com cada escondida - igual;
+- Estado da célula- momória longa;
+- forget gate, input gate, output gate.
+
+GRU - Gate Recurrent Unit
+
+- Resolve problema da dissipação do gradiente;
+- Baseado em portões: reiniciação e atualização;
+- Apenas 1 estado oculto;
+- Guarda dependências longas;
+- Reset Gate: Quanto de informações anteriores iremos ignorar;
+- Update Gate: Qunato de informação anteior iremos manter. 
+
+Extra: Transformadores
+
+- Maior parte de PLN era feito com RNN;
+- Attention is all you need (artigo);
+- Uso de RNN -> perde informação conforme se distância do início de uma série;
+- Contexto é essencial em PLN
+
+# Dados = Weather AUS
+
 ```{r}
+
 data(weatherAUS)
-#View(weatherAUS)
-#extrair somente colunas 1 and 14  e primeiras 3040 linhas (Albury location)
+head(weatherAUS)
+
+```
+
+```{r}
+# View(weatherAUS)
+# extrair somente colunas 1 and 14  e primeiras 3040 linhas (Albury location)
+
 data <- weatherAUS[1:3040,14:15]
+
 summary(data)
 ```
 
-#Pre-processamento
+
+# Pre-processamento
+
 ```{r}
 
 data_cleaned <- na.omit(data)
-data_used=data_cleaned[1:3000,]
+data_used = data_cleaned[1:3000,]
 x=data_used[,1]
 y=data_used[,2]
 
@@ -43,27 +119,32 @@ train=1:80
 test=81:100
 ```
 
-#modelo
+# modelo
+
 ```{r}
 set.seed(12)
-model <- trainr(Y = Y[,train],
-                X = X[,train],
+
+model <- trainr(Y = Y[, train],
+                X = X[, train],
                 learningrate = 0.01,
                 hidden_dim = 15,
                 network_type = "rnn",
                 numepochs = 100)
 
-model$error
-#poucas épocas?
+#model$error
+
+# poucas épocas?
 plot(colMeans(model$error),type='l',xlab='epoch',ylab='errors')
 ```
 
-#predição
+# predição
+
 ```{r}
 Yp <- predictr(model, X[,test])
 
 #Percentual de variação em uma variável explicada por outra
 #por enquanto: entenda que é um percentual de variação explicada
+
 rsq <- function(y_actual,y_predict)
 {
   cor(y_actual,y_predict)^2
@@ -84,7 +165,8 @@ mean(result_data$Ytest)
 mean(result_data$Ypredicted)
 ```
 
-#grafico
+# gráfico
+
 ```{r}
 plot(as.vector(t(result_data$Ytest)), col = 'red', type='l',
 main = "Actual vs Predicted Humidity: testing set",
@@ -95,7 +177,8 @@ col = c("red","black"),
 lty = c(1,1), lwd = c(1,1))
 ```
 
-#EXERCICIO 1
+# EXERCICIO 1
+
 ```{r}
 library("rnn")
 library("dplyr")
@@ -103,7 +186,7 @@ library("dplyr")
 data <- read.csv("PETR4.SA.csv")
 
 #Inverter a ordem das ações para pegar da última para a ´primeira
-data <-data[order(data$Date, decreasing = TRUE),]
+data <- data[order(data$Date, decreasing = TRUE),]
 
 fechamento <- data$Close
 
@@ -115,6 +198,11 @@ data_analise$fechamento_anterior <- fechamento_anterior
 
 summary(data_analise)
 
+
+```
+
+
+```{r}
 #exclui NA
 data_analise <- data_analise[1:248,]
 
@@ -146,10 +234,18 @@ model <- trainr(Y = Y[,train],
                 )
 
 
+
+```
+
+```{r}
 #no conjunto de treinamento
 Ytrain <- t(matrix(predictr(model, X[,train]),nrow=1))
 Yreal <- t(matrix(Y[,train],nrow=1))
 
+
+```
+
+```{r}
 #Percentual de variação em uma variável explicada por outra
 rsq <- function(y_actual,y_predict){
   cor(y_actual,y_predict)^2
@@ -160,6 +256,10 @@ rsq(Yreal,Ytrain)
 plot(Ytrain, type = "l", col = "darkred")
 lines(Yreal, col = "darkblue", type = "l")
 
+
+```
+
+```{r}
 #no conjunto de teste
 Ytest=matrix(Y[,test], nrow = 1)
 Ytest = t(Ytest)
@@ -175,11 +275,6 @@ rsq(result_data$Ytest,result_data$Ypredicted)
 mean(result_data$Ytest)
 mean(result_data$Ypredicted)
 ```
-
-
-
-
-
 
 
 

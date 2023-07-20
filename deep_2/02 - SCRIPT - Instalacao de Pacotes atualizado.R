@@ -2,7 +2,10 @@
 #                  INSTALAÇÃO E CARREGAMENTO DE PACOTES NECESSÁRIOS             #
 ##################################################################################
 #Pacotes utilizados
-pacotes <- c("rattle","rnn","ggplot2","dplyr")
+pacotes <- c("rattle",
+             "rnn",
+             "ggplot2",
+             "dplyr")
 
 if(sum(as.numeric(!pacotes %in% installed.packages())) != 0){
   instalador <- pacotes[!pacotes %in% installed.packages()]
