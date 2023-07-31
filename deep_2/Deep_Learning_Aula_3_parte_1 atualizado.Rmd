@@ -102,7 +102,9 @@ data_used = data_cleaned[1:3000,]
 x=data_used[,1]
 y=data_used[,2]
 
-Yscaled = (y - min(y)) / (max(y) - min(y))
+# --
+# minmaxscale
+Yscaled = (y - min(y)) / (max(y) - min(y)) 
 Xscaled = (x - min(x)) / (max(x) - min(x))
 
 y <- Yscaled
@@ -111,8 +113,8 @@ x <- Xscaled
 x <- as.matrix(x)
 y <- as.matrix(y)
 
-X <- matrix(x, nrow = 30)
-Y <- matrix(y, nrow = 30)
+X <- matrix(x, nrow = 30) #100 colunas com 30 observações cada
+Y <- matrix(y, nrow = 30) #100 colunas com 30 observações cada
 
 #train test split
 train=1:80
@@ -126,10 +128,11 @@ set.seed(12)
 
 model <- trainr(Y = Y[, train],
                 X = X[, train],
-                learningrate = 0.01,
-                hidden_dim = 15,
-                network_type = "rnn",
-                numepochs = 100)
+                learningrate = 0.01,  # taxa de aprendizado a ser aplicada para iteração de peso - taxa de apredizado
+                hidden_dim = 15,      # dimensão(ões) da(s) camada(s) oculta(s)
+                network_type = "rnn", # tipo de rede, pode ser rnn, gru ou lstm. gru e lstm são experimentais
+                numepochs = 100)      # número de iteração, ou seja, número de vezes que todo o conjunto de dados é apresentado à rede
+
 
 #model$error
 
@@ -159,10 +162,12 @@ Ypredicted <- t(Ypredicted)
 result_data <- data.frame(Ytest)
 result_data$Ypredicted <- Ypredicted     
 
-rsq(result_data$Ytest,result_data$Ypredicted)
+rsq <- rsq(result_data$Ytest,result_data$Ypredicted)
 
-mean(result_data$Ytest)
-mean(result_data$Ypredicted)
+mtest <- mean(result_data$Ytest)
+mpredicted <- mean(result_data$Ypredicted)
+
+print(paste("rsq", rsq, "mean test", mtest, "mean predict", mpredicted))
 ```
 
 # gráfico
@@ -190,7 +195,9 @@ data <- data[order(data$Date, decreasing = TRUE),]
 
 fechamento <- data$Close
 
-fechamento_anterior <- lead(fechamento,n=1L)
+# Encontre os valores "anteriores" (lag()) ou "próximos" (lead()) em um vetor. 
+# Útil para comparar valores anteriores ou posteriores aos valores atuais.
+fechamento_anterior <- lead(fechamento,n=1L) #?lead
 
 data_analise <- data.frame(fechamento)
 data_analise$fechamento_anterior <- fechamento_anterior
@@ -234,7 +241,7 @@ model <- trainr(Y = Y[,train],
                 )
 
 
-
+plot(colMeans(model$error),type='l',xlab='epoch',ylab='errors')
 ```
 
 ```{r}
